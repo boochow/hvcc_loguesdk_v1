@@ -1,0 +1,26 @@
+TARGET = testmem
+UNIT_HEAP_SIZE = 1000000
+
+CSRC = logue_mem.c {{heavy_files_c}}
+CXXSRC = testmem.cpp {{heavy_files_cpp}}
+
+COBJS = $(notdir $(CSRC:.c=.o))
+CXXOBJS = $(notdir $(CXXSRC:.cpp=.o))
+vpath %.c $(sort $(dir $(CSRC)))
+vpath %.cpp $(sort $(dir $(CXXSRC)))
+CFLAGS = -g -DDEBUG -DUNIT_HEAP_SIZE=$(UNIT_HEAP_SIZE) -D__LOGUE_MATH_HV__
+CXXFLAGS = $(CFLAGS)
+
+$(TARGET): $(COBJS) $(CXXOBJS)
+	g++ $(COBJS) $(CXXOBJS) -lc -lm -lstdc++ -o $@
+
+$(COBJS) : %.o : %.c Makefile
+	@echo Compiling $(<F)
+	gcc -c $(CFLAGS) -I. $< -o $@
+
+$(CXXOBJS) : %.o : %.cpp Makefile
+	@echo Compiling $(<F)
+	g++ -c $(CXXFLAGS) -I. $< -o $@
+
+clean:
+	rm *.o $(TARGET)

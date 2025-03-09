@@ -1,0 +1,42 @@
+{
+    "header" : 
+    {
+        "platform" : "nutekt-digital",
+        "module" : "osc",
+        "api" : "1.1-0",
+        "dev_id" : 0,
+        "prg_id" : 0,
+        "version" : "1.0-0",
+        "name" : "{{patch_name}}",
+        "num_param" : {{num_param}},
+        "params" : [
+            {% if num_param > 0 %}
+            {% if p_1_range_f is defined %}
+            ["{{p_1_display}}",    0, 100, "%"]
+            {% else %}
+            ["{{p_1_display}}", {{p_1_min}}, {{p_1_max}}, "%"]
+            {% endif %}
+            {% endif %}
+            {% if num_param > 1 %}
+            ,
+            ["{{p_2_display}}", {{p_2_min}}, {{p_2_max}}, "%"]
+            {% endif %}
+            {% if num_param > 2 %}
+            ,
+            ["{{p_3_display}}", {{p_3_min}}, {{p_3_max}}, "%"]
+            {% endif %}
+            {% if num_param > 3 %}
+            ,
+            ["{{p_4_display}}", {{p_4_min}}, {{p_4_max}}, "%"]
+            {% endif %}
+            {% if num_param > 4 %}
+            ,
+            ["{{p_5_display}}", {{p_5_min}}, {{p_5_max}}, "%"]
+            {% endif %}
+            {% if num_param > 5 %}
+            ,
+            ["{{p_6_display}}", {{p_6_min}}, {{p_6_max}}, "%"]
+            {% endif %}
+          ]
+    }
+}
