@@ -102,15 +102,17 @@ class LogueSDK_v1(Generator):
                     context['p_'+p_name] = ""
                     context['p_'+p_name+'_hash'] = p_rcv.hash
                 elif p_name in ['shape', 'alt']:
-                    context['p_'+p_name+'_range'] = p_range
-                    context['p_'+p_name+'_min'] = p_attr['min']
-                    context['p_'+p_name+'_default'] = p_attr['default']
-                    context['p_'+p_name+'_hash'] = p_rcv.hash
+                    context[p_name] = {'name' : p_name}
+                    context[p_name]['range'] = p_range
+                    context[p_name]['min'] = p_attr['min']
+                    context[p_name]['default'] = p_attr['default']
+                    context['p_'+p_name+'hash'] = p_rcv.hash
                 elif p_name in ['shape_f', 'alt_f']:
-                    context['p_'+p_name[:-2]+'_range_f'] = p_range
-                    context['p_'+p_name[:-2]+'_min'] = p_attr['min']
-                    context['p_'+p_name[:-2]+'_default'] = p_attr['default']
-                    context['p_'+p_name[:-2]+'_hash'] = p_rcv.hash
+                    context[p_name[:-2]] = {'name' : p_name}
+                    context[p_name[:-2]]['range_f'] = p_range
+                    context[p_name[:-2]]['min'] = p_attr['min']
+                    context[p_name[:-2]]['default'] = p_attr['default']
+                    context[p_name[:-2]]['hash'] = p_rcv.hash
                 elif re.match(r'^_\d+_', p_name):
                     numbered_params.append(param)
                 else:
@@ -142,13 +144,15 @@ class LogueSDK_v1(Generator):
                     print(f"Warning: too many parameters")
 
             # store parameter attributes into a dcitionary (context)
+            context['param'] = {}
             for i in range(6):
                 if osc_params[i] is None:
                     continue
                 # prefix (parameter number)
-                prefix = f'p_{i+1}_'
+                p_key = f'param_id{i+1}'
                 p_name, p_rcv = osc_params[i]
                 p_attr = p_rcv.attributes
+                context['param'][p_key] = {'name' : p_name}
                 match = re.match(r'^_\d+_(.+)$', p_rcv.display)
                 if match:
                     p_display = match.group(1)
@@ -169,24 +173,25 @@ class LogueSDK_v1(Generator):
                     else:
                         p_param_max = 100
                         p_param_min = 0
-                    if set_min_value(context, prefix+'range_f', p_range):
-                        context[prefix+'max_f'] = p_max
-                        context[prefix+'min_f'] = p_min
-                        context[prefix+'max'] = p_param_max
-                        context[prefix+'min'] = p_param_min
-                        context[prefix+'range'] = p_param_max - p_param_min
+
+                    if set_min_value(context['param'][p_key], 'range_f', p_range):
+                        context['param'][p_key]['max_f'] = p_max
+                        context['param'][p_key]['min_f'] = p_min
+                        context['param'][p_key]['max'] = p_param_max
+                        context['param'][p_key]['min'] = p_param_min
+                        context['param'][p_key]['range'] = p_param_max - p_param_min
                 else:
                     p_max = p_attr['max']
                     p_min = p_attr['min']
                     p_range = p_max - p_min
-                    if set_min_value(context, prefix+'range', p_range):
-                        context[prefix+'max'] = max(0, min(100, int(p_max)))
-                        context[prefix+'min'] = max(-100, int(p_min))
+                    if set_min_value(context['param'][p_key], 'range', p_range):
+                        context['param'][p_key]['max'] = max(0, min(100, int(p_max)))
+                        context['param'][p_key]['min'] = max(-100, int(p_min))
                 # store other key-values
-                context[prefix+'hash'] = p_rcv.hash
-                context[prefix+'name'] = p_name
-                context[prefix+'default'] = p_attr['default']
-                context[prefix+'display'] = p_display
+                context['param'][p_key]['hash'] = p_rcv.hash
+                context['param'][p_key]['name'] = p_name
+                context['param'][p_key]['default'] = p_attr['default']
+                context['param'][p_key]['display'] = p_display
 
             # find the total number of parameters
             for i in range(5, -1, -1):

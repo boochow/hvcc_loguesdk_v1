@@ -18,37 +18,55 @@
 
 static HeavyContextInterface* hvContext;
 
+{% if shape['range'] is defined %}
+static int32_t shape;
+static bool shape_dirty;
+{% elif shape['range_f'] is defined %}
+static float shape;
+static bool shape_dirty;
+{% endif %}
+{% if alt['range'] is defined %}
+static int32_t alt;
+static bool alt_dirty;
+{% elif alt['range_f'] is defined %}
+static float alt;
+static bool alt_dirty;
+{% endif %}
+
+{% for i in range(1, 7) %}
+    {% set id = "param_id" ~ i %}
+    {% if param[id] is defined %}
+        {% if param[id]['range'] is defined %}
+static int32_t {{param[id]['name']}};
+        {% elif param[id]['range_f'] is defined %}
+static float {{param[id]['name']}};
+        {% endif %}
+    {% endif %}
+{% endfor %}
+{% if num_param > 0 %}
+static bool param_dirty[{{num_param}}];
+{% endif %}
+
 void OSC_INIT(uint32_t platform, uint32_t api)
 {
     hvContext = hv_{{patch_name}}_new_with_options(48000, HV_MSGPOOLSIZE, HV_INPUTQSIZE, HV_OUTPUTQSIZE);
-    {% if p_shape_range is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE, {{p_shape_default}});
-    {% elif p_shape_range_f is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE_F, {{p_shape_default}});
+    {% if shape['range'] is defined %}
+    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE, {{shape['default']}});
+    {% elif shape['range_f'] is defined %}
+    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE_F, {{shape['default']}});
     {% endif %}
-    {% if p_alt_range is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT, {{p_alt_default}});
-    {% elif p_alt_range_f is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT_F, {{p_alt_default}});
+    {% if alt['range'] is defined %}
+    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT, {{alt['default']}});
+    {% elif alt['range_f'] is defined %}
+    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT_F, {{alt['default']}});
     {% endif %}
-    {% if p_1_range is defined or p_1_range_i is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_1_name|upper}}, {{p_1_default}});
+    {% for i in range(1, 7) %}
+    {% set id = "param_id" ~ i %}
+    {% if param[id] is defined %}
+    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{param[id]['name']|upper}}, {{param[id]['default']}});
+    param_dirty[{{i - 1}}] = false;
     {% endif %}
-    {% if p_2_range is defined or p_2_range_i is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_2_name|upper}}, {{p_2_default}});
-    {% endif %}
-    {% if p_3_range is defined or p_3_range_i is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_3_name|upper}}, {{p_3_default}});
-    {% endif %}
-    {% if p_4_range is defined or p_4_range_i is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_4_name|upper}}, {{p_4_default}});
-    {% endif %}
-    {% if p_5_range is defined or p_5_range_i is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_5_name|upper}}, {{p_5_default}});
-    {% endif %}
-    {% if p_6_range is defined or p_6_range_i is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_6_name|upper}}, {{p_6_default}});
-    {% endif %}
+    {% endfor %}
 }
 
 void OSC_CYCLE(const user_osc_param_t * const params,
@@ -75,6 +93,38 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH_NOTE, note_f);
     {% endif %}
+    {% if shape['range'] is defined %}
+    if (shape_dirty) {
+        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE, shape);
+        shape_dirty = false;
+    }
+    {% elif shape['range_f'] is defined %}
+    if (shape_dirty) {
+        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE_F, shape);
+        shape_dirty = false;
+    }
+    {% endif %}
+    {% if alt['range'] is defined %}
+    if (alt_dirty) {
+        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT, alt);
+        alt_dirty = false;
+    }
+    {% elif alt['range_f'] is defined %}
+    if (alt_dirty) {
+        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT_F, alt);
+        alt_dirty = false;
+    }
+    {% endif %}
+    {% for i in range(1, 7) %}
+    {% set id = "param_id" ~ i %}
+    {% if param[id] is defined %}
+    if (param_dirty[{{i - 1}}]) {
+        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{param[id]['name']|upper}}, {{param[id]['name']}});
+        param_dirty[{{i - 1}}] = false;
+    }
+    {% endif %}
+    {% endfor %}
+
     hv_processInline(hvContext, NULL, buffer, frames);
     for(; y!= y_e; ) {
         *(y++) = f32_to_q31(*p++);
@@ -105,118 +155,36 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     float f;
     switch(index){
     case k_user_osc_param_shape:
-        {% if p_shape_range is defined %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE, value);
-        {% elif p_shape_range_f is defined %}
-        f = {{p_shape_range_f}} * knob_f + {{p_shape_min}};
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE_F, f);
+        {% if shape['range'] is defined %}
+        shape = value;
+        shape_dirty = true;
+        {% elif shape['range_f'] is defined %}
+        shape = {{shape['range_f']}} * knob_f + {{shape['min']}};
+        shape_dirty = true;
         {% endif %}
-        break;
+        break;        
     case k_user_osc_param_shiftshape:
-        {% if p_alt_range is defined %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT, value);
-        {% elif p_alt_range_f is defined %}
-        f = {{p_alt_range_f}} * knob_f + {{p_alt_min}};
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT_F, f);
+        {% if alt['range'] is defined %}
+        alt = value;
+        alt_dirty = true;
+        {% elif alt['range_f'] is defined %}
+        alt = {{alt['range_f']}} * knob_f + {{alt['min']}};
+        alt_dirty = true;
         {% endif %}
         break;
-    case k_user_osc_param_id1:
-        {% if p_1_range_f is defined %}
-        f = {{p_1_range_f}} * value / {{p_1_range}} + ({{p_1_min_f}});
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_1_name|upper}}, f);
-        {% elif p_1_range is defined %}
-        f = value;
-        {% if p_1_min < 0 %}
-        f -= 100;
+    {% for i in range(1, 7) %}
+    {% set id = "param_id" ~ i %}
+    {% if param[id] is defined %}
+    case k_user_osc_{{id}}:
+        {% if param[id]['range'] is defined %}
+        {{param[id]['name']}} = value;
+        param_dirty[{{i - 1}}] = true;
+        {% elif param[id]['range_f'] is defined %}
+        {{param[id]['name']}} = {{param[id]['range_f']}} * value / {{param[id]['range']}} + ({{param[id]['min_f']}});;
+        dirty[{{i - 1}}] = true;
         {% endif %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_1_name|upper}}, f);
-        {% endif %}
-        break;
-    case k_user_osc_param_id2:
-        {% if p_2_range_f is defined %}
-        {% if p_2_min < 0 %}
-        f = value - 100 - ({{p_2_min}});
-        f = {{p_2_range_f}} * f / {{p_2_range}} + ({{p_2_min_f}});
-        {% else %}
-        f = {{p_2_range_f}} * value / {{p_2_range}} + ({{p_2_min_f}});
-        {% endif %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_2_name|upper}}, f);
-        {% elif p_2_range is defined %}
-        f = value;
-        {% if p_2_min < 0 %}
-        f -= 100;
-        {% endif %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_2_name|upper}}, f);
-        {% endif %}
-	break;
-    case k_user_osc_param_id3:
-        {% if p_3_range_f is defined %}
-        {% if p_3_min < 0 %}
-        f = value - 100 - ({{p_3_min}});
-        f = {{p_3_range_f}} * f / {{p_3_range}} + ({{p_3_min_f}});
-        {% else %}
-        f = {{p_3_range_f}} * value / {{p_3_range}} + ({{p_3_min_f}});
-        {% endif %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_3_name|upper}}, f);
-        {% elif p_3_range is defined %}
-        f = value;
-        {% if p_3_min < 0 %}
-        f -= 100;
-        {% endif %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_3_name|upper}}, f);
-        {% endif %}
-        break;
-    case k_user_osc_param_id4:
-        {% if p_4_range_f is defined %}
-        {% if p_4_min < 0 %}
-        f = value - 100 - ({{p_4_min}});
-        f = {{p_4_range_f}} * f / {{p_4_range}} + ({{p_4_min_f}});
-        {% else %}
-        f = {{p_4_range_f}} * value / {{p_4_range}} + ({{p_4_min_f}});
-        {% endif %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_4_name|upper}}, f);
-        {% elif p_4_range is defined %}
-        f = value;
-        {% if p_4_min < 0 %}
-        f -= 100;
-        {% endif %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_4_name|upper}}, f);
-        {% endif %}
-        break;
-    case k_user_osc_param_id5:
-        {% if p_5_range_f is defined %}
-        {% if p_5_min < 0 %}
-        f = value - 100 - ({{p_5_min}});
-        f = {{p_5_range_f}} * f / {{p_5_range}} + ({{p_5_min_f}});
-        {% else %}
-        f = {{p_5_range_f}} * value / {{p_5_range}} + ({{p_5_min_f}});
-        {% endif %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_5_name|upper}}, f);
-        {% elif p_5_range is defined %}
-        f = value;
-        {% if p_5_min < 0 %}
-        f -= 100;
-        {% endif %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_5_name|upper}}, f);
-        {% endif %}
-        break;
-    case k_user_osc_param_id6:
-        {% if p_6_range_f is defined %}
-        {% if p_6_min < 0 %}
-        f = value - 100 - ({{p_6_min}});
-        f = {{p_6_range_f}} * f / {{p_6_range}} + ({{p_6_min_f}});
-        {% else %}
-        f = {{p_6_range_f}} * value / {{p_6_range}} + ({{p_6_min_f}});
-        {% endif %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_6_name|upper}}, f);
-        {% elif p_6_range is defined %}
-        f = value;
-        {% if p_6_min < 0 %}
-        f -= 100;
-        {% endif %}
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{p_6_name|upper}}, f);
-        {% endif %}
-        break;
+    {% endif %}
+    {% endfor %}
     default:
       break;
     }
