@@ -18,19 +18,23 @@
 
 static HeavyContextInterface* hvContext;
 
-{% if shape['range'] is defined %}
+{% if shape is defined %}
+    {% if shape['range'] is defined %}
 static int32_t shape;
 static bool shape_dirty;
-{% elif shape['range_f'] is defined %}
+    {% elif shape['range_f'] is defined %}
 static float shape;
 static bool shape_dirty;
+    {% endif %}
 {% endif %}
-{% if alt['range'] is defined %}
+{% if alt is defined %}
+    {% if alt['range'] is defined %}
 static int32_t alt;
 static bool alt_dirty;
-{% elif alt['range_f'] is defined %}
+    {% elif alt['range_f'] is defined %}
 static float alt;
 static bool alt_dirty;
+    {% endif %}
 {% endif %}
 
 {% for i in range(1, 7) %}
@@ -50,15 +54,19 @@ static bool param_dirty[{{num_param}}];
 void OSC_INIT(uint32_t platform, uint32_t api)
 {
     hvContext = hv_{{patch_name}}_new_with_options(48000, HV_MSGPOOLSIZE, HV_INPUTQSIZE, HV_OUTPUTQSIZE);
-    {% if shape['range'] is defined %}
+    {% if shape is defined %}
+        {% if shape['range'] is defined %}
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE, {{shape['default']}});
-    {% elif shape['range_f'] is defined %}
+        {% elif shape['range_f'] is defined %}
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE_F, {{shape['default']}});
+        {% endif %}
     {% endif %}
-    {% if alt['range'] is defined %}
+    {% if alt is defined %}
+        {% if alt['range'] is defined %}
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT, {{alt['default']}});
-    {% elif alt['range_f'] is defined %}
+        {% elif alt['range_f'] is defined %}
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT_F, {{alt['default']}});
+        {% endif %}
     {% endif %}
     {% for i in range(1, 7) %}
     {% set id = "param_id" ~ i %}
@@ -93,27 +101,31 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH_NOTE, note_f);
     {% endif %}
-    {% if shape['range'] is defined %}
+    {% if shape is defined %}
+        {% if shape['range'] is defined %}
     if (shape_dirty) {
         hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE, shape);
         shape_dirty = false;
     }
-    {% elif shape['range_f'] is defined %}
+        {% elif shape['range_f'] is defined %}
     if (shape_dirty) {
         hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE_F, shape);
         shape_dirty = false;
     }
+        {% endif %}
     {% endif %}
-    {% if alt['range'] is defined %}
+    {% if alt is defined %}
+        {% if alt['range'] is defined %}
     if (alt_dirty) {
         hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT, alt);
         alt_dirty = false;
     }
-    {% elif alt['range_f'] is defined %}
+        {% elif alt['range_f'] is defined %}
     if (alt_dirty) {
         hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT_F, alt);
         alt_dirty = false;
     }
+        {% endif %}
     {% endif %}
     {% for i in range(1, 7) %}
     {% set id = "param_id" ~ i %}
@@ -155,21 +167,25 @@ void OSC_PARAM(uint16_t index, uint16_t value)
     float f;
     switch(index){
     case k_user_osc_param_shape:
-        {% if shape['range'] is defined %}
+        {% if shape is defined %}
+            {% if shape['range'] is defined %}
         shape = value;
         shape_dirty = true;
-        {% elif shape['range_f'] is defined %}
+            {% elif shape['range_f'] is defined %}
         shape = {{shape['range_f']}} * knob_f + {{shape['min']}};
         shape_dirty = true;
+            {% endif %}
         {% endif %}
         break;        
     case k_user_osc_param_shiftshape:
-        {% if alt['range'] is defined %}
+        {% if alt is defined %}
+            {% if alt['range'] is defined %}
         alt = value;
         alt_dirty = true;
-        {% elif alt['range_f'] is defined %}
+            {% elif alt['range_f'] is defined %}
         alt = {{alt['range_f']}} * knob_f + {{alt['min']}};
         alt_dirty = true;
+            {% endif %}
         {% endif %}
         break;
     {% for i in range(1, 7) %}
