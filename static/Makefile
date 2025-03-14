@@ -19,6 +19,21 @@ LDDIR ?= $(PROJECTDIR)/ld
 ZIP ?= /usr/bin/zip
 ZIP_ARGS := -r -m -q
 
+ifneq ($(findstring prologue, $(shell pwd)),)
+    PLATFORM ?= prologue
+endif
+ifneq ($(findstring minilogue-xd, $(shell pwd)),)
+    PLATFORM ?= minilogue-xd
+endif
+ifneq ($(findstring nutekt-digital, $(shell pwd)),)
+    PLATFORM ?= nutekt-digital
+endif
+
+SED ?= /bin/sed
+
+SEDSCRIPT = s/(\"platform\"\s*:\s*\")(.+)\"/\1$(PLATFORM)\"/
+PLATFORMSTR = $(shell echo $(PLATFORM) | tr '[:lower:]-' '[:upper:]_')
+
 # #############################################################################
 # Include project specific definition
 # #############################################################################
@@ -76,8 +91,19 @@ TOPT := -mthumb -mno-thumb-interwork -DTHUMB_NO_INTERWORKING -DTHUMB_PRESENT
 # #############################################################################
 # set targets and directories
 # #############################################################################
+ifeq "$(PLATFORM)" "nutekt-digital"
+	PKGEXT = ntkdigunit
+else
+ifeq "$(PLATFORM)" "minilogue-xd"
+	PKGEXT = mnlgxdunit
+else
+ifeq "$(PLATFORM)" "prologue"
+	PKGEXT = prlgunit
+endif
+endif
+endif
 
-PKGARCH := $(PROJECT).ntkdigunit
+PKGARCH := $(PROJECT).$(PKGEXT)
 MANIFEST := manifest.json
 PAYLOAD := payload.bin
 
@@ -144,9 +170,14 @@ OUTFILES := $(BUILDDIR)/$(PROJECT).elf \
 # targets
 ###############################################################################
 
+ifeq (,$(PLATFORM))
+all:
+	@echo "make PLATFORM=(prologue | minilogue-xd | nutekt-digital) install"
+else
 all: PRE_ALL $(OBJS) $(OUTFILES) POST_ALL
 	@echo Done
 	@echo
+endif
 
 PRE_ALL:
 
@@ -214,7 +245,7 @@ clean:
 $(BUILDDIR)/$(PKGARCH): | $(OBJS) $(OUTFILES)
 	@echo Packaging to $(BUILDDIR)/$(PKGARCH)
 	@mkdir -p $(BUILDDIR)/$(PROJECT)
-	@cp -a $(PROJECTDIR)/$(MANIFEST) $(BUILDDIR)/$(PROJECT)/
+	@cat $(PROJECTDIR)/$(MANIFEST) | $(SED) -r '$(SEDSCRIPT)' > $(BUILDDIR)/$(PROJECT)/$(MANIFEST)
 	@cp -a $(BUILDDIR)/$(PROJECT).bin $(BUILDDIR)/$(PROJECT)/$(PAYLOAD)
 	@cd $(BUILDDIR) && $(ZIP) $(ZIP_ARGS) $(PROJECT).zip $(PROJECT)
 	@mv $(BUILDDIR)/$(PROJECT).zip $(BUILDDIR)/$(PKGARCH)
