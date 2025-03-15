@@ -6,9 +6,6 @@
 
 PROJECT = {{patch_name}}
 
-# The minimum heap size
-# HEAP_SIZE ?= {{heap_size}}
-
 ifndef HEAP_SIZE
 # Estimate the necessary heap size and store it into HEAP_SIZE_FILE
 HEAP_SIZE_FILE := logue_heap_size.mk

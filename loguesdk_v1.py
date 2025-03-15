@@ -73,7 +73,6 @@ class LogueSDK_v1(Generator):
                 'msg_pool_size_kb': 1,     # minimum
                 'input_queue_size_kb': 1,  # minimum
                 'output_queue_size_kb': 0, # minimum
-                'heap_size': 2048 + 1024   # todo: evaluate the necessary size
             }
 
             # list of source files
