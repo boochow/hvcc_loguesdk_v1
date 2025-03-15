@@ -3,8 +3,7 @@ import shutil
 import time
 import jinja2
 import re
-
-import pprint # for debug
+import json
 
 from typing import Dict, Optional
 
@@ -42,8 +41,6 @@ class LogueSDK_v1(Generator):
     ) -> CompilerResp:
         begin_time = time.time()
         print("--> Invoking LogueSDK_v1")
-        pp = pprint.PrettyPrinter(indent=2, width=120)
-        pp.pprint(externs.parameters.inParam)
 
         out_dir = os.path.join(out_dir, "logue_unit")
 
@@ -200,7 +197,10 @@ class LogueSDK_v1(Generator):
             else:
                 num_param = 0
             context['num_param'] = num_param
-            pp.pprint(context)
+
+            # verbose
+            if verbose:
+                print(json.dumps(context, indent=2, ensure_ascii=False))
             
             # estimate required heap memory
             render_from_template('Makefile.testmem',
