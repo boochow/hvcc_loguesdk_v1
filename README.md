@@ -13,6 +13,10 @@ Clone this repository. In addition, you must have HVCC and the logue SDK install
    ```bash
    hvcc YOUR_PUREDATA_PATCH.pd -G loguesdk_v1 -n PATCH_NAME
    ```
+   In case your `loguesdk_v1` directory is not in `PYTHONPATH` then add it by:
+   ```bash
+   export PYTHONPATH=$PYTHONPATH:$(pwd)
+   ```
 
 2. Move the directory named `logue_unit` into one of the logue SDK platform directories (e.g., `logue-sdk/platform/prologue`, `logue-sdk/platform/minilogue-xd`, or `logue-sdk/platform/nutekt-digital`).
 
@@ -22,38 +26,43 @@ Clone this repository. In addition, you must have HVCC and the logue SDK install
    make install
    ```
 
-   This will build your oscillator unit.
+   You can also specify your platform without placing your project directory under `logue-sdk/platform` as compile option like:
+   
+   ```
+   make PLATFORMDIR="~/logue-sdk/platform/nutekt-digital" install
+   ```
 
 **Please note:**
 
 - The `[dac~]` object in your Pure Data patch must be single-channel (i.e., `[dac~ 1]`).
-- The `[adc~]` object does not receive sound.
+- The `[adc~]` object generates no sound.
 
 ## Interacting with the logue SDK API
 
 ### Knobs
 
-- The `[r shape]` object receives the shape knob value as an integer (0 to 1023). Alternatively, `[r shape_f]` receives a floating-point value between 0.0 and 1.0.
-- The `[r alt]` object receives the shift-shape knob value as an integer (0 to 1023). Alternatively, `[r alt_f]` receives a floating-point value between 0.0 and 1.0.
+- The `[r shape @hv_param]` object receives the shape knob value as an integer (0 to 1023). Alternatively, `[r shape_f @hv_param]` receives a floating-point value between 0.0 and 1.0.
+- The `[r alt @hv_param]` object receives the shift-shape knob value as an integer (0 to 1023). Alternatively, `[r alt_f @hv_param]` receives a floating-point value between 0.0 and 1.0.
 
 ### Pitch and LFO
 
-- The `[r pitch]` object receives the oscillator pitch frequency in Hz.
-- The `[r pitch_note]` object receives the oscillator pitch as a floating-point note number.
-- The `[r slfo]` object receives the shape LFO value, which ranges from -1.0 to 1.0. Note that the shape LFO is a control value, not a signal value.
+- The `[r pitch @hv_param]` object receives the oscillator pitch frequency in Hz. Alternatively, the `[r pitch_note @hv_param]` object receives the oscillator pitch as a floating-point note number.
+- The `[r slfo @hv_param]` object receives the shape LFO value, which ranges from -1.0 to 1.0. (NTS-1's LFO generates values between 0.0 and 1.0.) Note that the shape LFO is a control value, not a signal value.
 
 ### Note Events
 
-- The `[r noteon_trig]` object receives a `bang` when a MIDI Note On event occurs.
-- The `[r noteoff_trig]` object receives a `bang` when a MIDI Note Off event occurs.
+- The `[r noteon_trig @hv_param]` object receives a `bang` when a MIDI Note On event occurs.
+- The `[r noteoff_trig @hv_param]` object receives a `bang` when a MIDI Note Off event occurs.
 
 ### Parameters
 
 Any `[r]` object whose variable name does not match the ones described above but includes the `@hv_param` parameter is recognized as an oscillator parameter. Up to six oscillator parameters can be used.
 
+### Specifying parameter slot number
+
 Optionally, you can specify the parameter slot by adding a prefix `_N_` (where N is the parameter slot number from 1 to 6) to the variable name. The string without the prefix is used as the variable name on the synthesizer's display. For example, the variable name `_3_ratio` assigns the parameter "ratio" to slot 3.
 
-### Parameter Options
+### Receiving floating-point values
 
 By default, all variables receive raw integer values from the logue SDK API. You can specify minimum and maximum values, which must be between -100 and 100.
 
@@ -65,6 +74,10 @@ A variable name with the postfix `_f` receives floating-point values between 0.0
 
 In this case, the floating-point values are mapped from integer values between -100 and 100.
 
+### Parameter type
+
+Currently all parameters are defined as percentage type because typeless parameters are not allowed to be  negative values, and the displayed values are different between NTS-1 and prologue/minilogue xd.
+
 ## Restrictions
 
 ### Supported Unit Type
@@ -73,8 +86,34 @@ Only oscillator-type units are supported. Other logue SDK user unit types (such 
 
 ### Memory Footprint
 
-The oscillator unit must fit within a 32,767-byte space. All necessary resources (including code, constants, variables, etc.) must be stored in this space.
+The oscillator unit must fit within a 32,767-byte space. All necessary resources (including code, constants, variables, and heap/stack) must be in this space. You'll got a linker error when the binary size exceeds this boundary.
 
 ### DAC
 
 The logue SDK oscillator units support only a single-channel DAC with a 48,000 Hz sampling rate.
+
+## Appendix
+
+### Size of the heap memory
+
+Due to the 32KB momory space limitation, the heap size of an oscillator unit must be determined before compiling & building it. The heap size can be specified as a compiler flag like this:
+
+```makefile
+-DUNIT_HEAP_SIZE=3072
+```
+
+To estimate required heap memory size, this external generator generates a C source file `testmem.c` and a Makefile `Makefile.testmem`. This code is built and called from `project.mk` and the result is stored into `logue_heap_size.mk` .
+
+You can check the `malloc()` calls and total amount of requested memory space for generating the first 6400 samples like this:
+
+```bash
+make -f Makefile.testmem
+./testmem
+```
+### Math functions approximation
+
+Some of the math functions have been replaced with the logue SDK functions which finds the approximate value. If you got inaccurate results, comment out the line 
+```
+UDEFS += -DLOGUE_FAST_MATH
+```
+to disable replacement. Note that in general, this will result in a larger binary size.
