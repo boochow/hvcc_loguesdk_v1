@@ -37,6 +37,13 @@ static bool alt_dirty;
     {% endif %}
 {% endif %}
 
+{% if noteon_trig is defined %}
+static bool noteon_trig_dirty;
+{% endif %}
+{% if noteoff_trig is defined %}
+static bool noteoff_trig_dirty;
+{% endif %}
+
 {% for i in range(1, 7) %}
     {% set id = "param_id" ~ i %}
     {% if param[id] is defined %}
@@ -85,18 +92,18 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     float * __restrict p = buffer;
     q31_t * __restrict y = (q31_t *)yn;
     const q31_t * y_e = y + frames;
-    {% if p_slfo is defined %}
+    {% if slfo is defined %}
     float slfo;
 
     slfo = q31_to_f32(params->shape_lfo);
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SLFO, slfo);
     {% endif %}
-    {% if p_pitch is defined %} 
+    {% if pitch is defined %} 
     const float pitch = osc_w0f_for_note((params->pitch)>>8, params->pitch & 0xFF) * k_samplerate;
 
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH, pitch);
     {% endif %}
-    {% if p_pitch_note is defined %}
+    {% if pitch_note is defined %}
     const float note_f = (params->pitch >> 8) + (params->pitch & 0xFF) * 0.00390625;
 
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH_NOTE, note_f);
@@ -127,6 +134,18 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     }
         {% endif %}
     {% endif %}
+    {% if noteon_trig is defined %}
+    if (noteon_trig_dirty) {
+        hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEON_TRIG);
+        noteon_trig_dirty = false;
+    }
+    {% endif %}
+    {% if noteoff_trig is defined %}
+    if (noteoff_trig_dirty) {
+        hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEOFF_TRIG);
+        noteoff_trig_dirty = false;
+    }
+    {% endif %}
     {% for i in range(1, 7) %}
     {% set id = "param_id" ~ i %}
     {% if param[id] is defined %}
@@ -145,8 +164,8 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 
 void OSC_NOTEON(const user_osc_param_t * const params)
 {
-    {% if p_noteon_trig is defined %} 
-    hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEON_TRIG);
+    {% if noteon_trig is defined %} 
+    noteon_trig_dirty = true;
     {% else %}
     (void)params;
     {% endif %}
@@ -154,8 +173,8 @@ void OSC_NOTEON(const user_osc_param_t * const params)
 
 void OSC_NOTEOFF(const user_osc_param_t * const params)
 {
-    {% if p_noteoff_trig is defined %} 
-    hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEOFF_TRIG);
+    {% if noteoff_trig is defined %} 
+    noteoff_trig_dirty = true;
     {% else %}
     (void)params;
     {% endif %}
