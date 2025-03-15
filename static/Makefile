@@ -19,13 +19,13 @@ LDDIR ?= $(PROJECTDIR)/ld
 ZIP ?= /usr/bin/zip
 ZIP_ARGS := -r -m -q
 
-ifneq ($(findstring prologue, $(shell pwd)),)
+ifneq ($(findstring prologue, $(PLATFORMDIR)),)
     PLATFORM ?= prologue
 endif
-ifneq ($(findstring minilogue-xd, $(shell pwd)),)
+ifneq ($(findstring minilogue-xd, $(PLATFORMDIR)),)
     PLATFORM ?= minilogue-xd
 endif
-ifneq ($(findstring nutekt-digital, $(shell pwd)),)
+ifneq ($(findstring nutekt-digital, $(PLATFORMDIR)),)
     PLATFORM ?= nutekt-digital
 endif
 
@@ -170,14 +170,9 @@ OUTFILES := $(BUILDDIR)/$(PROJECT).elf \
 # targets
 ###############################################################################
 
-ifeq (,$(PLATFORM))
-all:
-	@echo "make PLATFORM=(prologue | minilogue-xd | nutekt-digital) install"
-else
 all: PRE_ALL $(OBJS) $(OUTFILES) POST_ALL
 	@echo Done
 	@echo
-endif
 
 PRE_ALL:
 
