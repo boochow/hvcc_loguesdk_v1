@@ -95,8 +95,8 @@ class LogueSDK_v1(Generator):
                 if p_name in ('pitch', 'pitch_note',
                               'noteon_trig', 'noteoff_trig',
                               'slfo'):
-                    context['p_'+p_name] = ""
-                    context['p_'+p_name+'_hash'] = p_rcv.hash
+                    context[p_name] = {}
+                    context[p_name]['hash'] = p_rcv.hash
                 elif p_name in ['shape', 'alt']:
                     context[p_name] = {'name' : p_name}
                     context[p_name]['range'] = p_range
