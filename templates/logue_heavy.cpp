@@ -88,7 +88,12 @@ void OSC_CYCLE(const user_osc_param_t * const params,
                int32_t *yn,
                const uint32_t frames)
 {
+#ifdef RENDER_HALF
+    float buffer[frames >> 1];
+    static float last_buf = 0.f;
+#else
     float buffer[frames];
+#endif
     float * __restrict p = buffer;
     q31_t * __restrict y = (q31_t *)yn;
     const q31_t * y_e = y + frames;
@@ -101,12 +106,20 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     {% if pitch is defined %} 
     const float pitch = osc_w0f_for_note((params->pitch)>>8, params->pitch & 0xFF) * k_samplerate;
 
+#ifdef RENDER_HALF
+    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH, pitch * 2.f);
+#else
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH, pitch);
+#endif
     {% endif %}
     {% if pitch_note is defined %}
     const float note_f = (params->pitch >> 8) + (params->pitch & 0xFF) * 0.00390625;
 
+#ifdef RENDER_HALF
+    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH_NOTE, note_f * 2.f);
+#else
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH_NOTE, note_f);
+#endif
     {% endif %}
     {% if shape is defined %}
         {% if shape['range'] is defined %}
@@ -156,10 +169,22 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     {% endif %}
     {% endfor %}
 
+#ifdef RENDER_HALF
+    hv_processInline(hvContext, NULL, buffer, frames >> 1);
+    for(int i = 0; y!= y_e; i++) {
+        if (i & 1) {
+            last_buf = *p++;
+            *(y++) = f32_to_q31(last_buf);
+        } else {
+            *(y++) = f32_to_q31((*p + last_buf) * 0.5);
+        }
+    }
+#else
     hv_processInline(hvContext, NULL, buffer, frames);
     for(; y!= y_e; ) {
         *(y++) = f32_to_q31(*p++);
     }
+#endif
 }
 
 void OSC_NOTEON(const user_osc_param_t * const params)

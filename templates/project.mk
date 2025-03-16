@@ -17,7 +17,7 @@ $(HEAP_SIZE_FILE):
 	HEAP_SIZE_TESTMEM=$$(grep '^total:' $$TMPFILE | awk '{print $$2}') ; \
 	echo "HEAP_SIZE := $$HEAP_SIZE_TESTMEM" > $(HEAP_SIZE_FILE) ; \
 	rm -f $$TMPFILE ; \
-	$(MAKE) -f Makefile.testmem
+	$(MAKE) -f Makefile.testmem clean
 
 include $(HEAP_SIZE_FILE)
 endif
@@ -32,6 +32,9 @@ UDEFS = -DNDEBUG -DUNIT_HEAP_SIZE=$(HEAP_SIZE) -fvisibility=hidden
 
 # Try disabling this option when the results are got inaccurate.
 UDEFS += -DLOGUE_FAST_MATH
+
+# Disable this for better sound (for simple patches only)
+UDEFS += -DRENDER_HALF
 
 ULIB =
 
