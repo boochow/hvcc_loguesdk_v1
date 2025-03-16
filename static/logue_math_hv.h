@@ -33,12 +33,6 @@ extern "C" {
 #undef hv_log_f
 #define hv_log_f(a) fastlogf(a)
 
-#undef hv_ceil_f
-#define hv_ceil_f(a) si_ceilf(a)
-
-#undef hv_floor_f
-#define hv_floor_f(a) si_floorf(a)
-
 #undef hv_round_f
 #define hv_round_f(a) si_roundf(a)
 
