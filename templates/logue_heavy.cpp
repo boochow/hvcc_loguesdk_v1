@@ -124,47 +124,54 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     {% if shape is defined %}
         {% if shape['range'] is defined %}
     if (shape_dirty) {
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE, shape);
-        shape_dirty = false;
+        if (hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE, shape)) {
+            shape_dirty = false;
+        }
     }
         {% elif shape['range_f'] is defined %}
     if (shape_dirty) {
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE_F, shape);
-        shape_dirty = false;
+        if (hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE_F, shape)) {
+            shape_dirty = false;
+        }
     }
         {% endif %}
     {% endif %}
     {% if alt is defined %}
         {% if alt['range'] is defined %}
     if (alt_dirty) {
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT, alt);
-        alt_dirty = false;
+        if (hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT, alt)) {
+            alt_dirty = false;
+        }
     }
         {% elif alt['range_f'] is defined %}
     if (alt_dirty) {
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT_F, alt);
-        alt_dirty = false;
+        if (hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT_F, alt)) {
+            alt_dirty = false;
+        }
     }
         {% endif %}
     {% endif %}
     {% if noteon_trig is defined %}
     if (noteon_trig_dirty) {
-        hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEON_TRIG);
-        noteon_trig_dirty = false;
+        if (hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEON_TRIG)) {
+            noteon_trig_dirty = false;
+        }
     }
     {% endif %}
     {% if noteoff_trig is defined %}
     if (noteoff_trig_dirty) {
-        hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEOFF_TRIG);
-        noteoff_trig_dirty = false;
+        if (hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEOFF_TRIG)) {
+            noteoff_trig_dirty = false;
+        }
     }
     {% endif %}
     {% for i in range(1, 7) %}
     {% set id = "param_id" ~ i %}
     {% if param[id] is defined %}
     if (param_dirty[{{i - 1}}]) {
-        hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{param[id]['name']|upper}}, {{param[id]['name']}});
-        param_dirty[{{i - 1}}] = false;
+        if (hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{param[id]['name']|upper}}, {{param[id]['name']}})) {
+            param_dirty[{{i - 1}}] = false;
+        }
     }
     {% endif %}
     {% endfor %}
