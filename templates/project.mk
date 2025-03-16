@@ -30,7 +30,7 @@ UINCDIR =
 
 UDEFS = -DNDEBUG -DUNIT_HEAP_SIZE=$(HEAP_SIZE) -fvisibility=hidden
 
-# Try disabling this option when the results are got inaccurate.
+# Try disabling this option when the results are inaccurate.
 UDEFS += -DLOGUE_FAST_MATH
 
 # Disable this for better sound (for simple patches only)
