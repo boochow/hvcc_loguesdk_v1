@@ -11,13 +11,17 @@ ifndef HEAP_SIZE
 HEAP_SIZE_FILE := logue_heap_size.mk
 
 $(HEAP_SIZE_FILE):
-	$(MAKE) -f Makefile.testmem
-	@TMPFILE=$$(mktemp) ; \
-	./testmem > $$TMPFILE ; \
-	HEAP_SIZE_TESTMEM=$$(grep '^total:' $$TMPFILE | awk '{print $$2}') ; \
-	echo "HEAP_SIZE := $$HEAP_SIZE_TESTMEM" > $(HEAP_SIZE_FILE) ; \
-	rm -f $$TMPFILE ; \
-	$(MAKE) -f Makefile.testmem clean
+	@if command -v gcc >/dev/null 2>&1 && command -v g++ >/dev/null 2>&1; then \
+		$(MAKE) -f Makefile.testmem ; \
+		TMPFILE=$$(mktemp) ; \
+		./testmem > $$TMPFILE ; \
+		HEAP_SIZE_TESTMEM=$$(grep '^total:' $$TMPFILE | awk '{print $$2}') ; \
+		echo "HEAP_SIZE := $$HEAP_SIZE_TESTMEM" > $(HEAP_SIZE_FILE) ; \
+		rm -f $$TMPFILE ; \
+		$(MAKE) -f Makefile.testmem clean ; \
+	else \
+		echo "HEAP_SIZE := 3072" > $(HEAP_SIZE_FILE) ; \
+	fi
 
 include $(HEAP_SIZE_FILE)
 endif
