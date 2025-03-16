@@ -34,6 +34,9 @@ UINCDIR =
 
 UDEFS = -DNDEBUG -DUNIT_HEAP_SIZE=$(HEAP_SIZE) -fvisibility=hidden
 
+# Assume Unix-like to suppress warning messages
+UDEFS += -U_WIN32 -U_WIN64 -U_MSC_VER -D__unix
+
 # Try disabling this option when the results are inaccurate.
 UDEFS += -DLOGUE_FAST_MATH
 
