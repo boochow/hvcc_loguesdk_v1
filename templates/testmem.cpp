@@ -20,8 +20,7 @@ int main(int argc, char* argv[]) {
         {% endif %}
         {% if pitch is defined %} 
         hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH, 440.f);
-        {% endif %}
-        {% if pitch_note is defined %}
+        {% elif pitch_note is defined %}
         hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH_NOTE, 60);
         {% endif %}
         {% if shape is defined %}
@@ -42,7 +41,6 @@ int main(int argc, char* argv[]) {
         {% set id = "param_id" ~ i %}
         {% if param[id] is defined %}
         hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{param[id]['name']|upper}}, {{param[id]['default']}});
-        param_dirty[{{i - 1}}] = false;
         {% endif %}
         {% endfor %}
         hv_processInline(hvContext, NULL, buffer, 64);
