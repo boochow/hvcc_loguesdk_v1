@@ -1,4 +1,7 @@
 #include "logue_mem.h"
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 
 #ifndef UNIT_HEAP_SIZE
 #define UNIT_HEAP_SIZE (1024 * 3)
@@ -14,14 +17,14 @@ size_t heap_offset = 0;
 void* logue_malloc(size_t size) {
     if (heap_offset + size > UNIT_HEAP_SIZE) {
 #ifdef DEBUG
-        printf("malloc: %d : NG\n", size);
+        printf("malloc: %ld : NG\n", size);
 #endif
         return NULL;
     }
     void* ptr = &heap[heap_offset];
     heap_offset += size;
 #ifdef DEBUG
-    printf("malloc: %d : OK\n", size);
+    printf("malloc: %ld : OK\n", size);
 #endif
     return ptr;
 }

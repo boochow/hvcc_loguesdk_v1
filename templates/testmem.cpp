@@ -45,5 +45,5 @@ int main(int argc, char* argv[]) {
         {% endfor %}
         hv_processInline(hvContext, NULL, buffer, 64);
     }
-    printf("total: %d\n", heap_offset);
+    printf("total: %ld\n", heap_offset);
 }
