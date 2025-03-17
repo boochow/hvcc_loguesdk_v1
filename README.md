@@ -4,21 +4,23 @@ This project is an external generator for [HVCC](https://github.com/Wasted-Audio
 
 ## Installation
 
-Clone this repository. In addition, ensure that both HVCC and the logue SDK are installed. You also need gcc/g++ to estimate the required heap memory size. See Appendix for details.
+Clone this repository. In addition, ensure that both HVCC and the logue SDK are installed. You also need gcc/g++ to estimate the required heap memory size; see the Appendix for details.
 
 ## Usage
 
-1. From the repository's directory, run:
+1. Add the `loguesdk_v1` directory to your `PYTHONPATH` by:
 
    ```bash
-   hvcc YOUR_PUREDATA_PATCH.pd -G loguesdk_v1 -n PATCH_NAME
+   export PYTHONPATH=$PYTHONPATH:path-to-hvcc_loguesdk_v1
    ```
- 
-   If the `loguesdk_v1` directory is not in your `PYTHONPATH`, add it by:
- 
+
+   Then, run:
+
    ```bash
-   export PYTHONPATH=$PYTHONPATH:$(pwd)
+   hvcc YOUR_PUREDATA_PATCH.pd -G loguesdk_v1 -n PATCH_NAME -o DESTINATION_DIR
    ```
+
+   Check the directory `DESTINATION_DIR`. There should be 4 directories named `c`, `hv`, `ir`, and `logue_unit`.
 
 2. Move the directory named `logue_unit` into one of the logue SDK platform directories (e.g., `logue-sdk/platform/prologue`, `logue-sdk/platform/minilogue-xd`, or `logue-sdk/platform/nutekt-digital`).
 
@@ -28,7 +30,7 @@ Clone this repository. In addition, ensure that both HVCC and the logue SDK are 
    make install
    ```
 
-   Alternatively, you can specify your platform via a compile option without moving your project directory under `logue-sdk/platform`:
+   Alternatively, you can specify your platform via a compile-time option without moving your project directory under `logue-sdk/platform`:
 
    ```bash
    make PLATFORMDIR="~/logue-sdk/platform/nutekt-digital" install
@@ -38,9 +40,9 @@ Clone this repository. In addition, ensure that both HVCC and the logue SDK are 
 
 - The `[dac~]` object in your Pure Data patch must be single-channel (i.e., `[dac~ 1]`).
 - The `[adc~]` object does not receive sound.
-- Refer [this](https://github.com/Wasted-Audio/hvcc/blob/develop/docs/09.supported_vanilla_objects.md) for objects supported by HVCC.
+- For a list of objects supported by HVCC, refer [here](https://github.com/Wasted-Audio/hvcc/blob/develop/docs/09.supported_vanilla_objects.md).
 
-## Interacting with the logue SDK API
+## Receiving parameters in your Pure Data patch
 
 ### Knobs
 
@@ -69,7 +71,7 @@ Optionally, you can specify the parameter slot by adding a prefix `_N_` (where N
 
 By default, all variables receive raw integer values from the logue SDK API. You can specify minimum and maximum values, which must be between -100 and 100.
 
-A variable with the postfix `_f` receives floating-point values between 0.0 and 1.0 (mapped from integer values between 0 and 100). You can optionally specify the minimum, maximum, and default values using the syntax:
+A variable with the postfix `_f` receives a floating-point value between 0.0 and 1.0 (mapped from integer values between 0 and 100). You can optionally specify the minimum, maximum, and default values using the syntax:
 
 ```
 [r varname @hv_param min max default]
@@ -99,15 +101,15 @@ The logue SDK oscillator units support only a single-channel DAC with a 48,000 H
 
 ### Size of the Heap Memory
 
-Due to the 32KB memory space limitation, the heap size of an oscillator unit must be specified to build your unit. The heap size can be specified as a compiler flag, for example:
+Due to the 32KB memory space limitation, you must specify the heap size of an oscillator unit during the build process. The heap size can be set as a compiler flag, for example:
 
 ```makefile
 -DUNIT_HEAP_SIZE=3072
 ```
 
-The heap size is automatically estimated in `project.mk`, or you can specify the size like this:
+The heap size is automatically estimated in `project.mk`, or you can manually specify the size like this:
 
-``` bash
+```bash
 make HEAP_SIZE=4096
 ```
 
@@ -122,7 +124,7 @@ make -f Makefile.testmem
 ./testmem
 ```
 
-If gcc and g++ are not available in your develpment environment, the default heap size (3072 bytes) is used. Since the docker image version of logue SDK building environment doesn't provide gcc/g++, the heap size always becomes the default size.
+If gcc and g++ are not available in your development environment, the default heap size (3072 bytes) is used. (Note: In the Docker image version of the logue SDK build environment, gcc/g++ are not provided, so the heap size will always default.)
 
 ### Math Functions Approximation
 
@@ -134,12 +136,12 @@ UDEFS += -DLOGUE_FAST_MATH
 
 to disable the fast math approximation. Note that disabling this may result in a larger binary size.
 
-### Internal sampling rate
+### Internal Sampling Rate
 
-To reduce the processing load, this generator set the sampling rate of an oscillator unit to 24 KHz by default. This is half the rate of actual oscillator and the sound lacks harmonics over 12 KHz. You can edit the `project.mk` file and comment out the line:
+To reduce processing load, this generator sets the sampling rate of an oscillator unit to 24 KHz by default. This is half the actual oscillator rate, so the sound will lack harmonics above 12 KHz. You can edit the `project.mk` file and comment out the line:
 
 ```makefile
 UDEFS += -DRENDER_HALF
 ```
 
-to let the oscllator work in 48 KHz sampling rate. However, it might cause the synthesizer to work abnormally.
+to run the oscillator at a 48 KHz sampling rate. However, this may cause the synthesizer to behave abnormally for complex pure data patches.
