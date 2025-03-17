@@ -1,10 +1,10 @@
 # HVCC External Generator for logue SDK V1
 
-This project is an external generator for [HVCC](https://github.com/Wasted-Audio/hvcc). It generates code and other necessary files for the KORG [logue SDK](https://github.com/korginc/logue-sdk) v1.1 from a Pure Data patch. Currently, only the oscillator unit for SDK v1 is supported (for Prologue, Minilogue XD, and NTS-1).
+This project is an external generator for [HVCC](https://github.com/Wasted-Audio/hvcc). It generates code and other necessary files for the KORG [logue SDK](https://github.com/korginc/logue-sdk) v1.1 from a Pure Data patch. Currently, only the oscillator unit for SDK v1 is supported (targeting Prologue, Minilogue XD, and NTS-1).
 
 ## Installation
 
-Clone this repository. In addition, you must have HVCC and the logue SDK installed.
+Clone this repository. In addition, ensure that both HVCC and the logue SDK are installed. You also need gcc/g++ to estimate the required heap memory size. See Appendix for details.
 
 ## Usage
 
@@ -13,7 +13,9 @@ Clone this repository. In addition, you must have HVCC and the logue SDK install
    ```bash
    hvcc YOUR_PUREDATA_PATCH.pd -G loguesdk_v1 -n PATCH_NAME
    ```
-   In case your `loguesdk_v1` directory is not in `PYTHONPATH` then add it by:
+ 
+   If the `loguesdk_v1` directory is not in your `PYTHONPATH`, add it by:
+ 
    ```bash
    export PYTHONPATH=$PYTHONPATH:$(pwd)
    ```
@@ -26,16 +28,17 @@ Clone this repository. In addition, you must have HVCC and the logue SDK install
    make install
    ```
 
-   You can also specify your platform without placing your project directory under `logue-sdk/platform` as compile option like:
-   
-   ```
+   Alternatively, you can specify your platform via a compile option without moving your project directory under `logue-sdk/platform`:
+
+   ```bash
    make PLATFORMDIR="~/logue-sdk/platform/nutekt-digital" install
    ```
 
 **Please note:**
 
 - The `[dac~]` object in your Pure Data patch must be single-channel (i.e., `[dac~ 1]`).
-- The `[adc~]` object generates no sound.
+- The `[adc~]` object does not receive sound.
+- Refer [this](https://github.com/Wasted-Audio/hvcc/blob/develop/docs/09.supported_vanilla_objects.md) for objects supported by HVCC.
 
 ## Interacting with the logue SDK API
 
@@ -46,8 +49,8 @@ Clone this repository. In addition, you must have HVCC and the logue SDK install
 
 ### Pitch and LFO
 
-- The `[r pitch @hv_param]` object receives the oscillator pitch frequency in Hz. Alternatively, the `[r pitch_note @hv_param]` object receives the oscillator pitch as a floating-point note number.
-- The `[r slfo @hv_param]` object receives the shape LFO value, which ranges from -1.0 to 1.0. (NTS-1's LFO generates values between 0.0 and 1.0.) Note that the shape LFO is a control value, not a signal value.
+- The `[r pitch @hv_param]` object receives the oscillator pitch frequency in Hz. Alternatively, `[r pitch_note @hv_param]` receives the oscillator pitch as a floating-point note number.
+- The `[r slfo @hv_param]` object receives the shape LFO value, which ranges from -1.0 to 1.0 (note that the NTS-1’s LFO generates values between 0.0 and 1.0). Remember that the shape LFO is a control value, not a signal value.
 
 ### Note Events
 
@@ -56,17 +59,17 @@ Clone this repository. In addition, you must have HVCC and the logue SDK install
 
 ### Parameters
 
-Any `[r]` object whose variable name does not match the ones described above but includes the `@hv_param` parameter is recognized as an oscillator parameter. Up to six oscillator parameters can be used.
+Any `[r]` object whose variable name does not match those described above but includes the `@hv_param` parameter is recognized as an oscillator parameter. Up to six oscillator parameters can be used.
 
-### Specifying parameter slot number
+#### Specifying Parameter Slot Number
 
-Optionally, you can specify the parameter slot by adding a prefix `_N_` (where N is the parameter slot number from 1 to 6) to the variable name. The string without the prefix is used as the variable name on the synthesizer's display. For example, the variable name `_3_ratio` assigns the parameter "ratio" to slot 3.
+Optionally, you can specify the parameter slot by adding a prefix `_N_` (where N is a number from 1 to 6) to the variable name. The remainder of the name is used as the variable name on the synthesizer’s display. For example, the variable name `_3_ratio` assigns the parameter "ratio" to slot 3.
 
-### Receiving floating-point values
+#### Receiving Floating-Point Values
 
 By default, all variables receive raw integer values from the logue SDK API. You can specify minimum and maximum values, which must be between -100 and 100.
 
-A variable name with the postfix `_f` receives floating-point values between 0.0 and 1.0 (mapped from integer values between 0 and 100). You can optionally specify the minimum, maximum, and default values using the syntax:
+A variable with the postfix `_f` receives floating-point values between 0.0 and 1.0 (mapped from integer values between 0 and 100). You can optionally specify the minimum, maximum, and default values using the syntax:
 
 ```
 [r varname @hv_param min max default]
@@ -74,9 +77,9 @@ A variable name with the postfix `_f` receives floating-point values between 0.0
 
 In this case, the floating-point values are mapped from integer values between -100 and 100.
 
-### Parameter type
+#### Parameter Type
 
-Currently all parameters are defined as percentage type because typeless parameters are not allowed to be  negative values, and the displayed values are different between NTS-1 and prologue/minilogue xd.
+Currently, all parameters are defined as percentage type because parameters without a specified type cannot have negative values, and the displayed values differ between the NTS-1 and Prologue/Minilogue XD.
 
 ## Restrictions
 
@@ -86,7 +89,7 @@ Only oscillator-type units are supported. Other logue SDK user unit types (such 
 
 ### Memory Footprint
 
-The oscillator unit must fit within a 32,767-byte space. All necessary resources (including code, constants, variables, and heap/stack) must be in this space. You'll got a linker error when the binary size exceeds this boundary.
+The oscillator unit must fit within a 32,767-byte space. All necessary resources—including code, constants, variables, and both heap and stack—must reside within this space. A linker error will occur if the binary size exceeds this boundary.
 
 ### DAC
 
@@ -94,26 +97,49 @@ The logue SDK oscillator units support only a single-channel DAC with a 48,000 H
 
 ## Appendix
 
-### Size of the heap memory
+### Size of the Heap Memory
 
-Due to the 32KB momory space limitation, the heap size of an oscillator unit must be determined before compiling & building it. The heap size can be specified as a compiler flag like this:
+Due to the 32KB memory space limitation, the heap size of an oscillator unit must be specified to build your unit. The heap size can be specified as a compiler flag, for example:
 
 ```makefile
 -DUNIT_HEAP_SIZE=3072
 ```
 
-To estimate required heap memory size, this external generator generates a C source file `testmem.c` and a Makefile `Makefile.testmem`. This code is built and called from `project.mk` and the result is stored into `logue_heap_size.mk` .
+The heap size is automatically estimated in `project.mk`, or you can specify the size like this:
 
-You can check the `malloc()` calls and total amount of requested memory space for generating the first 6400 samples like this:
+``` bash
+make HEAP_SIZE=4096
+```
+
+To estimate the required heap memory size, this external generator creates a C source file (`testmem.c`) and a Makefile (`Makefile.testmem`). 
+
+When gcc and g++ are available in your environment, this code is built and executed from `project.mk`, and the estimated heap size is saved in `logue_heap_size.mk`.
+
+You can check the `malloc()` calls and the total requested memory for generating the first 6400 samples by running:
 
 ```bash
 make -f Makefile.testmem
 ./testmem
 ```
-### Math functions approximation
 
-Some of the math functions have been replaced with the logue SDK functions which finds the approximate value. If you got inaccurate results, comment out the line 
-```
+If gcc and g++ are not available in your develpment environment, the default heap size (3072 bytes) is used. Since the docker image version of logue SDK building environment doesn't provide gcc/g++, the heap size always becomes the default size.
+
+### Math Functions Approximation
+
+Some math functions have been replaced with logue SDK functions that provide approximate values. If you get inaccurate results, comment out the line:
+
+```makefile
 UDEFS += -DLOGUE_FAST_MATH
 ```
-to disable replacement. Note that in general, this will result in a larger binary size.
+
+to disable the fast math approximation. Note that disabling this may result in a larger binary size.
+
+### Internal sampling rate
+
+To reduce the processing load, this generator set the sampling rate of an oscillator unit to 24 KHz by default. This is half the rate of actual oscillator and the sound lacks harmonics over 12 KHz. You can edit the `project.mk` file and comment out the line:
+
+```makefile
+UDEFS += -DRENDER_HALF
+```
+
+to let the oscllator work in 48 KHz sampling rate. However, it might cause the synthesizer to work abnormally.
