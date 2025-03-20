@@ -46,6 +46,8 @@ class LogueSDK_v1(Generator):
 
         try:
             # check num of channels
+            if num_input_channels != 0:
+                print(f"Warning: {num_input_channels} input channels(ignored)")
             if num_output_channels != 1:
                 raise Exception("Logue SDK supports only monoral output.")
 
