@@ -57,6 +57,10 @@ static float {{param[id]['name']}};
 {% if num_param > 0 %}
 static bool param_dirty[{{num_param}}];
 {% endif %}
+{% for key, entry in table.items() %}
+static float * table_{{ key }};
+static unsigned int table_{{ key }}_len;
+{% endfor %}
 
 void OSC_INIT(uint32_t platform, uint32_t api)
 {
@@ -82,6 +86,10 @@ void OSC_INIT(uint32_t platform, uint32_t api)
     param_dirty[{{i - 1}}] = false;
     {% endif %}
     {% endfor %}
+    {% for key, entry in table.items() %}
+    table_{{ key }} = hv_table_getBuffer(hvContext, HV_{{patch_name|upper}}_TABLE_{{key|upper}});
+    table_{{ key }}_len = hv_table_getLength(hvContext, HV_{{patch_name|upper}}_TABLE_{{key|upper}});
+    {% endfor %}
 }
 
 void OSC_CYCLE(const user_osc_param_t * const params,
@@ -99,13 +107,19 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     const q31_t * y_e = y + frames;
     {% if slfo is defined %}
     float slfo;
+    {% endif %}
+    {% if pitch is defined %} 
+    const float pitch = osc_w0f_for_note((params->pitch)>>8, params->pitch & 0xFF) * k_samplerate;
+    {% endif %}
+    {% if pitch_note is defined %}
+    const float note_f = (params->pitch >> 8) + (params->pitch & 0xFF) * 0.00390625;
+    {% endif %}
 
+    {% if slfo is defined %}
     slfo = q31_to_f32(params->shape_lfo);
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SLFO, slfo);
     {% endif %}
     {% if pitch is defined %} 
-    const float pitch = osc_w0f_for_note((params->pitch)>>8, params->pitch & 0xFF) * k_samplerate;
-
 #ifdef RENDER_HALF
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH, pitch * 2.f);
 #else
@@ -113,8 +127,6 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 #endif
     {% endif %}
     {% if pitch_note is defined %}
-    const float note_f = (params->pitch >> 8) + (params->pitch & 0xFF) * 0.00390625;
-
 #ifdef RENDER_HALF
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH_NOTE, note_f * 2.f);
 #else
@@ -172,6 +184,14 @@ void OSC_CYCLE(const user_osc_param_t * const params,
         if (hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{param[id]['name']|upper}}, {{param[id]['name']}})) {
             param_dirty[{{i - 1}}] = false;
         }
+    }
+    {% endif %}
+    {% endfor %}
+    {% for key, entry in table.items() %}
+    {% if entry.type == "random" %}
+    table_{{ key }}_len = hv_table_getLength(hvContext, HV_{{patch_name|upper}}_TABLE_{{key|upper}});
+    for (int i = 0; i < table_{{ key }}_len ; i++) {
+        table_{{ key }}[i] = osc_white();
     }
     {% endif %}
     {% endfor %}

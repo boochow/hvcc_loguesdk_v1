@@ -200,9 +200,26 @@ class LogueSDK_v1(Generator):
                 num_param = 0
             context['num_param'] = num_param
 
+            # store tables into a dcitionary (context)
+            context['table'] = {}
+            for table in externs.tables:
+                t_name, t_tbl = table
+                context['table'][t_name] = {'name' : t_name}
+                context['table'][t_name]['hash'] = t_tbl.hash
+                if t_name.endswith('_r'):
+                    context['table'][t_name]['type'] = 'random'
+                else:
+                    context['table'][t_name]['type'] = 'none'
+
             # verbose
             if verbose:
-                print(json.dumps(context, indent=2, ensure_ascii=False))
+                print(f"input channels:{num_input_channels}")
+                print(f"output channels:{num_output_channels}")
+                print(f"parameters: {externs.parameters}")
+                print(f"events: {externs.events}")
+                print(f"midi: {externs.midi}")
+                print(f"tables: {externs.tables}")
+                print(f"context: {json.dumps(context, indent=2, ensure_ascii=False)}")
             
             # estimate required heap memory
             render_from_template('Makefile.testmem',
