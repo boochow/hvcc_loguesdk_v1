@@ -16,6 +16,7 @@
  #define HV_OUTPUTQSIZE {{output_queue_size_kb}}
 #endif
 
+static bool stop_osc_param;
 static HeavyContextInterface* hvContext;
 
 {% if shape is defined %}
@@ -64,27 +65,22 @@ static unsigned int table_{{ key }}_len;
 
 void OSC_INIT(uint32_t platform, uint32_t api)
 {
+    stop_osc_param = true;
     hvContext = hv_{{patch_name}}_new_with_options(48000, HV_MSGPOOLSIZE, HV_INPUTQSIZE, HV_OUTPUTQSIZE);
     {% if shape is defined %}
-        {% if shape['range'] is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE, {{shape['default']}});
-        {% elif shape['range_f'] is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SHAPE_F, {{shape['default']}});
-        {% endif %}
+    shape = {{shape['default']}};
+    shape_dirty = true;
     {% endif %}
     {% if alt is defined %}
-        {% if alt['range'] is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT, {{alt['default']}});
-        {% elif alt['range_f'] is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_ALT_F, {{alt['default']}});
-        {% endif %}
+    alt = {{alt['default']}};
+    alt_dirty = true;
     {% endif %}
     {% for i in range(1, 7) %}
-    {% set id = "param_id" ~ i %}
-    {% if param[id] is defined %}
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_{{param[id]['name']|upper}}, {{param[id]['default']}});
-    param_dirty[{{i - 1}}] = false;
-    {% endif %}
+      {% set id = "param_id" ~ i %}
+      {% if param[id] is defined %}
+    {{param[id]['name']}} = {{param[id]['default']}};
+    param_dirty[{{i - 1}}] = true;
+      {% endif %}
     {% endfor %}
     {% for key, entry in table.items() %}
     table_{{ key }} = hv_table_getBuffer(hvContext, HV_{{patch_name|upper}}_TABLE_{{key|upper}});
@@ -115,6 +111,7 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     const float note_f = (params->pitch >> 8) + (params->pitch & 0xFF) * 0.00390625;
     {% endif %}
 
+    stop_osc_param = false;
     {% if slfo is defined %}
     slfo = q31_to_f32(params->shape_lfo);
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SLFO, slfo);
@@ -236,6 +233,10 @@ void OSC_PARAM(uint16_t index, uint16_t value)
 {
     float knob_f = param_val_to_f32(value);
     float f;
+
+    if (stop_osc_param) {
+        return; // avoid all parameters to be zero'ed after OSC_INIT
+    }
     switch(index){
     case k_user_osc_param_shape:
         {% if shape is defined %}
