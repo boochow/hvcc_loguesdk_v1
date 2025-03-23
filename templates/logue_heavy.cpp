@@ -268,8 +268,8 @@ void OSC_PARAM(uint16_t index, uint16_t value)
         {{param[id]['name']}} = value;
         param_dirty[{{i - 1}}] = true;
         {% elif param[id]['range_f'] is defined %}
-        {{param[id]['name']}} = {{param[id]['range_f']}} * value / {{param[id]['range']}} + ({{param[id]['min_f']}});;
-        dirty[{{i - 1}}] = true;
+        {{param[id]['name']}} = {{param[id]['range_f']}} * value / ({{param[id]['max'] - param[id]['min']}}) + ({{param[id]['min_f']}});;
+        param_dirty[{{i - 1}}] = true;
         {% endif %}
     {% endif %}
     {% endfor %}

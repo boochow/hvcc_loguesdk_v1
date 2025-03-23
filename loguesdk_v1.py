@@ -163,11 +163,13 @@ class LogueSDK_v1(Generator):
                     p_min = p_attr['min']
                     p_range = p_max - p_min
                     if p_min < 0:
-                        p_param_max = int(100 * min(1, max(p_max, 0) / abs(p_min)))
-                        if p_max == 0:
-                            p_param_min = -100
+                        if p_max > 0:
+                            p_param_max = int(-100 * max(-1, p_max / p_min))
+                            p_param_min = int(100 * max(-1, p_min / p_max))
                         else:
-                            p_param_min = int(-100 * min(1, abs(p_min) / p_max))
+                            # logue SDK can't set max value to less than 0
+                            p_param_max = 0
+                            p_param_min = -100
                     else:
                         p_param_max = 100
                         p_param_min = 0
@@ -177,7 +179,6 @@ class LogueSDK_v1(Generator):
                         context['param'][p_key]['min_f'] = p_min
                         context['param'][p_key]['max'] = p_param_max
                         context['param'][p_key]['min'] = p_param_min
-                        context['param'][p_key]['range'] = p_param_max - p_param_min
                 else:
                     p_max = p_attr['max']
                     p_min = p_attr['min']
