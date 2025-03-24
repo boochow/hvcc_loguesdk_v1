@@ -271,6 +271,7 @@ void OSC_PARAM(uint16_t index, uint16_t value)
         {{param[id]['name']}} = {{param[id]['range_f']}} * value / ({{param[id]['max'] - param[id]['min']}}) + ({{param[id]['min_f']}});;
         param_dirty[{{i - 1}}] = true;
         {% endif %}
+        break;
     {% endif %}
     {% endfor %}
     default:
