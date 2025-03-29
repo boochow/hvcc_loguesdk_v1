@@ -7,7 +7,8 @@ import json
 
 from typing import Dict, Optional
 
-from hvcc.types.compiler import CompilerResp, ExternInfo, Generator
+from hvcc.types.compiler import CompilerResp, ExternInfo, Generator, CompilerNotif, CompilerMsg
+from hvcc.interpreters.pd2hv.NotificationEnum import NotificationEnum
 from hvcc.types.meta import Meta
 
 def set_min_value(dic, key, value):
@@ -284,5 +285,5 @@ class LogueSDK_v1(Generator):
                 ),
                 in_dir=c_src_dir,
                 out_dir=out_dir,
-                compile_time=time.time() - tick
+                compile_time=time.time() - begin_time
             )
