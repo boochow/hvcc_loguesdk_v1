@@ -103,6 +103,10 @@ The oscillator unit must fit within a 32,767-byte space. All necessary resources
 
 The logue SDK oscillator units support only a single-channel DAC with a 48,000 Hz sampling rate.
 
+### `msg_toString()` does not work
+
+To reduce the memory footprint, `hv_snprintf()` is replaced by an empty function. The `msg_toString()` function does not work because it requires `hv_snprintf()`.
+
 ## Appendix
 
 ### Size of the Heap Memory
