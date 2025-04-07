@@ -66,7 +66,11 @@ static unsigned int table_{{ key }}_len;
 void OSC_INIT(uint32_t platform, uint32_t api)
 {
     stop_osc_param = true;
+#ifdef RENDER_HALF
+    hvContext = hv_{{patch_name}}_new_with_options(24000, HV_MSGPOOLSIZE, HV_INPUTQSIZE, HV_OUTPUTQSIZE);
+#else
     hvContext = hv_{{patch_name}}_new_with_options(48000, HV_MSGPOOLSIZE, HV_INPUTQSIZE, HV_OUTPUTQSIZE);
+#endif
     {% if shape is defined %}
     shape = {{shape['default']}};
     shape_dirty = true;
@@ -117,18 +121,10 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_SLFO, slfo);
     {% endif %}
     {% if pitch is defined %} 
-#ifdef RENDER_HALF
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH, pitch * 2.f);
-#else
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH, pitch);
-#endif
     {% endif %}
     {% if pitch_note is defined %}
-#ifdef RENDER_HALF
-    hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH_NOTE, note_f * 2.f);
-#else
     hv_sendFloatToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_PITCH_NOTE, note_f);
-#endif
     {% endif %}
     {% if shape is defined %}
         {% if shape['range'] is defined %}
