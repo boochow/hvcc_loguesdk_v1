@@ -156,20 +156,6 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     }
         {% endif %}
     {% endif %}
-    {% if noteon_trig is defined %}
-    if (noteon_trig_dirty) {
-        if (hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEON_TRIG)) {
-            noteon_trig_dirty = false;
-        }
-    }
-    {% endif %}
-    {% if noteoff_trig is defined %}
-    if (noteoff_trig_dirty) {
-        if (hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEOFF_TRIG)) {
-            noteoff_trig_dirty = false;
-        }
-    }
-    {% endif %}
     {% for i in range(1, 7) %}
     {% set id = "param_id" ~ i %}
     {% if param[id] is defined %}
@@ -188,6 +174,20 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     }
     {% endif %}
     {% endfor %}
+    {% if noteon_trig is defined %}
+    if (noteon_trig_dirty) {
+        if (hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEON_TRIG)) {
+            noteon_trig_dirty = false;
+        }
+    }
+    {% endif %}
+    {% if noteoff_trig is defined %}
+    if (noteoff_trig_dirty) {
+        if (hv_sendBangToReceiver(hvContext, HV_{{patch_name|upper}}_PARAM_IN_NOTEOFF_TRIG)) {
+            noteoff_trig_dirty = false;
+        }
+    }
+    {% endif %}
 
 #ifdef RENDER_HALF
     hv_processInline(hvContext, NULL, buffer, frames >> 1);
